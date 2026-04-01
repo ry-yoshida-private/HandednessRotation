@@ -4,7 +4,7 @@ from .axis import ExtrinsicAxis3D, IntrinsicAxis3D, RotationAxis
 from .matrix import HandednessRotationMatrix
 from .quaternion import HandednessQuaternion
 from .rodrigues import HandednessRodriguesRotationParameter
-from .euler import EulerAngles
+from .euler import EulerAngles, EulerIndexMapper
 from .order import IntrinsicRotationOrder, ExtrinsicRotationOrder
 
 __all__ = [
@@ -17,6 +17,7 @@ __all__ = [
     "IntrinsicAxis3D",
     "RotationAxis",
     "EulerAngles",
+    "EulerIndexMapper",
     "IntrinsicRotationOrder",
     "ExtrinsicRotationOrder",
 ]
