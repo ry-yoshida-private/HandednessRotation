@@ -6,7 +6,7 @@ class IntrinsicAxis3D(Enum):
     Intrinsic axis in 3D.
 
     Enum values use uppercase letters so they can be passed directly to
-    ``scipy.spatial.transform.Rotation`` Euler conventions.
+    scipy.spatial.transform.Rotation Euler conventions.
 
     Attributes
     ----------

@@ -6,7 +6,7 @@ class ExtrinsicAxis3D(Enum):
     Extrinsic axis in 3D.
 
     Enum values use lowercase letters so they can be passed directly to
-    ``scipy.spatial.transform.Rotation`` Euler conventions.
+    scipy.spatial.transform.Rotation Euler conventions.
 
     Attributes
     ----------

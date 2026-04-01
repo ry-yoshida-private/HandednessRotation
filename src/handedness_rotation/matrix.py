@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 from dataclasses import dataclass
+from typing import Callable
 
 from cartesian_axis import Axis, CoordinateHandedness
 from rotation import RotationMatrix
@@ -12,16 +13,16 @@ class HandednessRotationMatrix(RotationMatrix):
     """
     Container class for rotation matrix representation with coordinate handedness.
 
-    Extends ``RotationMatrix`` (pure SO(3)-style validation on the base type) with a
-    ``CoordinateHandedness`` tag. Determinant checks follow the former ``rotation copy``
-    convention: right-handed frames expect determinant ``+1``, left-handed ``-1``.
+    Extends RotationMatrix (pure SO(3)-style validation on the base type) with a
+    CoordinateHandedness tag. Determinant checks follow the former rotation copy
+    convention: right-handed frames expect determinant +1, left-handed -1.
 
     Attributes
     ----------
     value: np.ndarray
         The rotation matrix as a 3x3 matrix.
     coordinate_handedness: CoordinateHandedness
-        The coordinate handedness (``CoordinateHandedness.RIGHT`` or ``LEFT``).
+        The coordinate handedness (CoordinateHandedness.RIGHT or CoordinateHandedness.LEFT).
 
     Raises
     ------
@@ -76,51 +77,45 @@ class HandednessRotationMatrix(RotationMatrix):
 
     def __matmul__(
         self,
-        other: HandednessRotationMatrix,
-    ) -> HandednessRotationMatrix:
+        other: RotationMatrix,
+    ) -> RotationMatrix:
         """
         Multiply two handedness rotation matrices.
 
         Parameters
         ----------
         other: HandednessRotationMatrix
-            Right-hand operand; must be another ``HandednessRotationMatrix``.
+            Right-hand operand; must be another HandednessRotationMatrix.
 
         Returns
         -------
         HandednessRotationMatrix:
-            The matrix product, with the same ``coordinate_handedness`` as ``self``.
+            The matrix product, with the same coordinate_handedness as self.
 
         Raises
         ------
         TypeError:
-            If ``other`` is not a ``HandednessRotationMatrix``.
+            If other is not a HandednessRotationMatrix.
         ValueError:
             If the coordinate handednesses are not the same.
         """
-        match other:
-            case HandednessRotationMatrix() if (
-                other.coordinate_handedness != self.coordinate_handedness
-            ):
-                raise ValueError(
-                    "Invalid rotation matrix: coordinate systems must be the same"
-                )
-            case HandednessRotationMatrix():
-                return HandednessRotationMatrix(
-                    value=self.value @ other.value,
-                    coordinate_handedness=self.coordinate_handedness,
-                )
-            case _:
-                raise TypeError(
-                    "HandednessRotationMatrix @ other requires another "
-                    "HandednessRotationMatrix; use from_rotation_matrix or plain "
-                    "RotationMatrix @ RotationMatrix otherwise."
-                )
+        if not isinstance(other, HandednessRotationMatrix):
+            raise TypeError(
+                "HandednessRotationMatrix @ other requires another HandednessRotationMatrix; use from_rotation_matrix or plain RotationMatrix @ RotationMatrix otherwise."
+            )
+        if other.coordinate_handedness != self.coordinate_handedness:
+            raise ValueError(
+                "Invalid rotation matrix: coordinate systems must be the same"
+            )
+        return HandednessRotationMatrix(
+            value=self.value @ other.value,
+            coordinate_handedness=self.coordinate_handedness,
+        )
 
     @classmethod
     def unit_matrix(
         cls,
-        coordinate_handedness: CoordinateHandedness,
+        coordinate_handedness: CoordinateHandedness = CoordinateHandedness.RIGHT,
     ) -> HandednessRotationMatrix:
         """
         Create the identity rotation matrix with a given handedness.
@@ -133,20 +128,23 @@ class HandednessRotationMatrix(RotationMatrix):
         Returns
         -------
         HandednessRotationMatrix:
-            The 3x3 identity matrix tagged with ``coordinate_handedness``.
+            The 3x3 identity matrix tagged with coordinate_handedness.
         """
-        return cls(value=np.eye(3), coordinate_handedness=coordinate_handedness)
+        return cls(
+            value=np.eye(3),
+            coordinate_handedness=coordinate_handedness,
+        )
 
     @classmethod
     def from_approximate_matrix_by_qr(
         cls,
         value: np.ndarray,
-        coordinate_handedness: CoordinateHandedness,
+        coordinate_handedness: CoordinateHandedness = CoordinateHandedness.RIGHT,
     ) -> HandednessRotationMatrix:
         """
         Build a valid rotation matrix from an approximate 3x3 matrix using QR decomposition.
 
-        The orthogonal factor ``Q`` is adjusted so its determinant matches ``coordinate_handedness``.
+        The orthogonal factor Q is adjusted so its determinant matches coordinate_handedness.
 
         Parameters
         ----------
@@ -160,9 +158,10 @@ class HandednessRotationMatrix(RotationMatrix):
         HandednessRotationMatrix:
             The closest valid rotation matrix from the QR factor.
         """
-        Q, R = np.linalg.qr(value)
+        Q, _ = np.linalg.qr(value) # Q, R
         det = np.linalg.det(Q)
 
+        criterion: Callable[[float], bool]
         match coordinate_handedness:
             case CoordinateHandedness.RIGHT:
                 criterion = lambda d: d < 0
@@ -179,13 +178,13 @@ class HandednessRotationMatrix(RotationMatrix):
     def from_approximate_matrix_with_SVD(
         cls,
         value: np.ndarray,
-        coordinate_handedness: CoordinateHandedness,
+        coordinate_handedness: CoordinateHandedness = CoordinateHandedness.RIGHT,
     ) -> HandednessRotationMatrix:
         """
         Build a valid rotation matrix from an approximate 3x3 matrix using SVD.
 
         The reconstructed orthogonal matrix is adjusted so its determinant matches
-        ``coordinate_handedness``.
+        coordinate_handedness.
 
         Parameters
         ----------
@@ -199,10 +198,10 @@ class HandednessRotationMatrix(RotationMatrix):
         HandednessRotationMatrix:
             The valid rotation matrix from the SVD-based orthogonalization.
         """
-        u, s, vh = np.linalg.svd(value)
+        u, _, vh = np.linalg.svd(value) # u, s, vh
         rotation_matrix = u @ vh
 
-        # Ensure the rotation matrix has the correct determinant for the given handedness.
+        criterion: Callable[[np.ndarray], bool]
         match coordinate_handedness:
             case CoordinateHandedness.RIGHT:
                 criterion = lambda rm: np.linalg.det(rm) < 0
@@ -212,24 +211,27 @@ class HandednessRotationMatrix(RotationMatrix):
             u[:, -1] *= -1
             rotation_matrix = u @ vh
 
-        return cls(value=rotation_matrix, coordinate_handedness=coordinate_handedness)
+        return cls(
+            value=rotation_matrix,
+            coordinate_handedness=coordinate_handedness,
+        )
 
     def as_rotation_matrix(self) -> RotationMatrix:
         """
-        Drop handedness metadata and return a pure ``RotationMatrix``.
+        Drop handedness metadata and return a pure RotationMatrix.
 
-        Only ``CoordinateHandedness.RIGHT`` is supported: the underlying matrix must
-        be a proper rotation in SO(3) (determinant +1), which ``RotationMatrix`` enforces.
+        Only CoordinateHandedness.RIGHT is supported: the underlying matrix must
+        be a proper rotation in SO(3) (determinant +1), which RotationMatrix enforces.
 
         Returns
         -------
         RotationMatrix:
-            The same ``value`` without handedness.
+            The same value without handedness.
 
         Raises
         ------
         ValueError:
-            If ``coordinate_handedness`` is not right-handed.
+            If coordinate_handedness is not right-handed.
         """
         match self.coordinate_handedness:
             case CoordinateHandedness.LEFT:

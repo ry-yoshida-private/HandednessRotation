@@ -20,7 +20,7 @@ class HandednessRodriguesRotationParameter(RodriguesRotationParameter):
     value: np.ndarray
         The Rodrigues rotation parameter (length-3 vector).
     coordinate_handedness: CoordinateHandedness
-        The coordinate handedness carried through to ``rotation_matrix``.
+        The coordinate handedness carried through to rotation_matrix.
     """
 
     coordinate_handedness: CoordinateHandedness
@@ -33,7 +33,7 @@ class HandednessRodriguesRotationParameter(RodriguesRotationParameter):
         Returns
         -------
         HandednessRotationMatrix:
-            The rotation matrix tagged with ``coordinate_handedness``.
+            The rotation matrix tagged with coordinate_handedness.
         """
         theta = np.linalg.norm(self.value)
 

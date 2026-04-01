@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from functools import cached_property
 
 from cartesian_axis import CoordinateHandedness
-from scipy.spatial.transform import Rotation
+from scipy.spatial.transform import Rotation # type: ignore
 
 from rotation import Quaternion
 
@@ -16,8 +16,8 @@ class HandednessQuaternion(Quaternion):
     """
     Container class for quaternion representation of rotation with coordinate handedness.
 
-    Inherits validation and format handling from ``Quaternion``; adds a handedness tag
-    used when building a ``HandednessRotationMatrix`` from this quaternion.
+    Inherits validation and format handling from Quaternion; adds a handedness tag
+    used when building a HandednessRotationMatrix from this quaternion.
 
     Parameters
     ----------
@@ -26,7 +26,7 @@ class HandednessQuaternion(Quaternion):
     format: QuaternionFormat
         The format of the quaternion (WXYZ or XYZW).
     coordinate_handedness: CoordinateHandedness
-        The coordinate handedness (e.g. ``CoordinateHandedness.RIGHT``).
+        The coordinate handedness (e.g. CoordinateHandedness.RIGHT).
     """
 
     coordinate_handedness: CoordinateHandedness
@@ -36,8 +36,8 @@ class HandednessQuaternion(Quaternion):
         """
         Convert quaternion to rotation matrix with handedness metadata.
 
-        Uses ``scipy.spatial.transform.Rotation``; the resulting 3x3 matrix must still
-        satisfy ``HandednessRotationMatrix`` determinant rules for ``coordinate_handedness``.
+        Uses scipy.spatial.transform.Rotation; the resulting 3x3 matrix must still
+        satisfy HandednessRotationMatrix determinant rules for coordinate_handedness.
 
         Returns
         -------
