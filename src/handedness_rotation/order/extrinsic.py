@@ -1,6 +1,6 @@
 from enum import Enum
 from typing import Generator
-from src.utils.geometry.three_dimension import Axis
+from cartesian_axis import Axis
 
 class ExtrinsicRotationOrder(Enum):
     """
