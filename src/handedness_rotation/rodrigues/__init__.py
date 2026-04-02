@@ -1,3 +1,3 @@
-from .rodrigues_rotation import HandednessRodriguesRotationParameter
+from .rodrigues_rotation import RodriguesRotationParameter
 
-__all__ = ["HandednessRodriguesRotationParameter"]
+__all__ = ["RodriguesRotationParameter"]

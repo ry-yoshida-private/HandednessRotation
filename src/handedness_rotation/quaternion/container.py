@@ -6,13 +6,13 @@ from functools import cached_property
 from cartesian_axis import CoordinateHandedness
 from scipy.spatial.transform import Rotation # type: ignore
 
-from rotation import Quaternion
+from rotation import Quaternion as Q
 
 from ..matrix import RotationMatrix
 
 
 @dataclass(frozen=True)
-class HandednessQuaternion(Quaternion):
+class Quaternion(Q):
     """
     Container class for quaternion representation of rotation with coordinate handedness.
 

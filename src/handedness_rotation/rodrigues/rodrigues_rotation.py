@@ -5,13 +5,13 @@ from functools import cached_property
 
 
 from cartesian_axis import CoordinateHandedness
-from rotation import RodriguesRotationParameter, SkewSymmetricMatrix
+from rotation import RodriguesRotationParameter as RRP, SkewSymmetricMatrix
 
 from ..matrix import RotationMatrix
 
 
 @dataclass(frozen=True)
-class HandednessRodriguesRotationParameter(RodriguesRotationParameter):
+class RodriguesRotationParameter(RRP):
     """
     Container class for Rodrigues rotation parameter with coordinate handedness.
 
@@ -44,7 +44,7 @@ class HandednessRodriguesRotationParameter(RodriguesRotationParameter):
             )
 
         # Normalized axis for Rodrigues formula; base class has no handedness field.
-        normalized_rodrigues = RodriguesRotationParameter(value=self.value / theta)
+        normalized_rodrigues = RRP(value=self.value / theta)
 
         K = SkewSymmetricMatrix.from_k_parameter(
             k_x=normalized_rodrigues.x,
