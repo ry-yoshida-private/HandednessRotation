@@ -5,11 +5,11 @@ from dataclasses import dataclass
 from typing import Callable
 
 from cartesian_axis import Axis, CoordinateHandedness
-from rotation import RotationMatrix
+from rotation import RotationMatrix as R
 
 
 @dataclass(frozen=True)
-class HandednessRotationMatrix(RotationMatrix):
+class RotationMatrix(R):
     """
     Container class for rotation matrix representation with coordinate handedness.
 
@@ -77,29 +77,29 @@ class HandednessRotationMatrix(RotationMatrix):
 
     def __matmul__(
         self,
-        other: RotationMatrix,
-    ) -> RotationMatrix:
+        other: R,
+    ) -> R:
         """
         Multiply two handedness rotation matrices.
 
         Parameters
         ----------
-        other: HandednessRotationMatrix
+        other: R
             Right-hand operand; must be another HandednessRotationMatrix.
 
         Returns
         -------
-        HandednessRotationMatrix:
+        R:
             The matrix product, with the same coordinate_handedness as self.
 
         Raises
         ------
         TypeError:
-            If other is not a HandednessRotationMatrix.
+            If other is not a RotationMatrix.
         ValueError:
             If the coordinate handednesses are not the same.
         """
-        if not isinstance(other, HandednessRotationMatrix):
+        if not isinstance(other, RotationMatrix):
             raise TypeError(
                 "HandednessRotationMatrix @ other requires another HandednessRotationMatrix; use from_rotation_matrix or plain RotationMatrix @ RotationMatrix otherwise."
             )
@@ -107,7 +107,7 @@ class HandednessRotationMatrix(RotationMatrix):
             raise ValueError(
                 "Invalid rotation matrix: coordinate systems must be the same"
             )
-        return HandednessRotationMatrix(
+        return RotationMatrix(
             value=self.value @ other.value,
             coordinate_handedness=self.coordinate_handedness,
         )
@@ -116,7 +116,7 @@ class HandednessRotationMatrix(RotationMatrix):
     def unit_matrix(
         cls,
         coordinate_handedness: CoordinateHandedness = CoordinateHandedness.RIGHT,
-    ) -> HandednessRotationMatrix:
+    ) -> RotationMatrix:
         """
         Create the identity rotation matrix with a given handedness.
 
@@ -140,7 +140,7 @@ class HandednessRotationMatrix(RotationMatrix):
         cls,
         value: np.ndarray,
         coordinate_handedness: CoordinateHandedness = CoordinateHandedness.RIGHT,
-    ) -> HandednessRotationMatrix:
+    ) -> RotationMatrix:
         """
         Build a valid rotation matrix from an approximate 3x3 matrix using QR decomposition.
 
@@ -179,7 +179,7 @@ class HandednessRotationMatrix(RotationMatrix):
         cls,
         value: np.ndarray,
         coordinate_handedness: CoordinateHandedness = CoordinateHandedness.RIGHT,
-    ) -> HandednessRotationMatrix:
+    ) -> RotationMatrix:
         """
         Build a valid rotation matrix from an approximate 3x3 matrix using SVD.
 
@@ -215,28 +215,3 @@ class HandednessRotationMatrix(RotationMatrix):
             value=rotation_matrix,
             coordinate_handedness=coordinate_handedness,
         )
-
-    def as_rotation_matrix(self) -> RotationMatrix:
-        """
-        Drop handedness metadata and return a pure RotationMatrix.
-
-        Only CoordinateHandedness.RIGHT is supported: the underlying matrix must
-        be a proper rotation in SO(3) (determinant +1), which RotationMatrix enforces.
-
-        Returns
-        -------
-        RotationMatrix:
-            The same value without handedness.
-
-        Raises
-        ------
-        ValueError:
-            If coordinate_handedness is not right-handed.
-        """
-        match self.coordinate_handedness:
-            case CoordinateHandedness.LEFT:
-                raise ValueError(
-                    "as_rotation_matrix requires RIGHT handedness (determinant +1)."
-                )
-            case CoordinateHandedness.RIGHT:
-                return RotationMatrix(value=self.value)

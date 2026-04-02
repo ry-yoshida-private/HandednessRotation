@@ -8,7 +8,7 @@ from scipy.spatial.transform import Rotation # type: ignore
 
 from rotation import Quaternion
 
-from ..matrix import HandednessRotationMatrix
+from ..matrix import RotationMatrix
 
 
 @dataclass(frozen=True)
@@ -32,7 +32,7 @@ class HandednessQuaternion(Quaternion):
     coordinate_handedness: CoordinateHandedness
 
     @cached_property
-    def rotation_matrix(self) -> HandednessRotationMatrix:
+    def rotation_matrix(self) -> RotationMatrix:
         """
         Convert quaternion to rotation matrix with handedness metadata.
 
@@ -48,7 +48,7 @@ class HandednessQuaternion(Quaternion):
             self.value,
             scalar_first=self.is_scalar_first,
         )
-        return HandednessRotationMatrix(
+        return RotationMatrix(
             value=scipy_rotation.as_matrix(),
             coordinate_handedness=self.coordinate_handedness,
         )

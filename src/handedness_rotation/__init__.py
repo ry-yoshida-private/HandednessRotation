@@ -1,7 +1,7 @@
 from cartesian_axis import Axis, CoordinateHandedness
 
 from .axis import ExtrinsicAxis3D, IntrinsicAxis3D, RotationAxis
-from .matrix import HandednessRotationMatrix
+from .matrix import RotationMatrix
 from .quaternion import HandednessQuaternion
 from .rodrigues import HandednessRodriguesRotationParameter
 from .euler import EulerAngles, EulerIndexMapper
@@ -13,7 +13,7 @@ __all__ = [
     "ExtrinsicAxis3D",
     "HandednessQuaternion",
     "HandednessRodriguesRotationParameter",
-    "HandednessRotationMatrix",
+    "RotationMatrix",
     "IntrinsicAxis3D",
     "RotationAxis",
     "EulerAngles",

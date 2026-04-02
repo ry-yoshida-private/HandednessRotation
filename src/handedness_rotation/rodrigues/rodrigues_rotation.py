@@ -7,7 +7,7 @@ from functools import cached_property
 from cartesian_axis import CoordinateHandedness
 from rotation import RodriguesRotationParameter, SkewSymmetricMatrix
 
-from ..matrix import HandednessRotationMatrix
+from ..matrix import RotationMatrix
 
 
 @dataclass(frozen=True)
@@ -26,7 +26,7 @@ class HandednessRodriguesRotationParameter(RodriguesRotationParameter):
     coordinate_handedness: CoordinateHandedness
 
     @cached_property
-    def rotation_matrix(self) -> HandednessRotationMatrix:
+    def rotation_matrix(self) -> RotationMatrix:
         """
         Convert Rodrigues rotation parameter to rotation matrix.
 
@@ -38,7 +38,7 @@ class HandednessRodriguesRotationParameter(RodriguesRotationParameter):
         theta = np.linalg.norm(self.value)
 
         if theta < 1e-6:
-            return HandednessRotationMatrix(
+            return RotationMatrix(
                 value=np.eye(3),
                 coordinate_handedness=self.coordinate_handedness,
             )
@@ -57,7 +57,7 @@ class HandednessRodriguesRotationParameter(RodriguesRotationParameter):
         symmetric_term = (1 - np.cos(theta)) * K.squared
         R = I + skew_term + symmetric_term
 
-        return HandednessRotationMatrix(
+        return RotationMatrix(
             value=R,
             coordinate_handedness=self.coordinate_handedness,
         )
