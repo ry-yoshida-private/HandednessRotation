@@ -14,7 +14,7 @@ class EulerAngles:
     ----------
     value: np.ndarray
         The Euler angles as a 3x1 vector. Order is: roll, pitch, yaw.
-    rotation_order: IntrinsicRotationOrder | ExtrinsicRotationOrder
+    order: IntrinsicRotationOrder | ExtrinsicRotationOrder
         The order of the Euler angles.
     unit: AngleUnit
         The unit of the Euler angles.
@@ -25,7 +25,7 @@ class EulerAngles:
         If the Euler angles are not a 3x1 vector.
     """
     value: np.ndarray
-    rotation_order: IntrinsicRotationOrder | ExtrinsicRotationOrder
+    order: IntrinsicRotationOrder | ExtrinsicRotationOrder
     unit: AngleUnit
 
     def __post_init__(self):
@@ -91,5 +91,5 @@ class EulerAngles:
 
     def __str__(self) -> str:
         return f"EulerAngles(value={self.value}, \
-        \nrotation_order={self.rotation_order}, \
+        \norder={self.order}, \
         \nunit={self.unit})"

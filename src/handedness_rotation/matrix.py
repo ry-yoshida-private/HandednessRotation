@@ -1,11 +1,18 @@
 from __future__ import annotations
 
 import numpy as np
+from scipy.spatial.transform import Rotation # type: ignore
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, TYPE_CHECKING
 
 from cartesian_axis import Axis, CoordinateHandedness
 from rotation import RotationMatrix as R
+from units import AngleUnit
+
+from .order import IntrinsicRotationOrder, ExtrinsicRotationOrder
+
+if TYPE_CHECKING:
+    from .euler import EulerAngles
 
 
 @dataclass(frozen=True)
@@ -215,3 +222,21 @@ class RotationMatrix(R):
             value=rotation_matrix,
             coordinate_handedness=coordinate_handedness,
         )
+
+    def to_euler_angles(
+        self, 
+        order: IntrinsicRotationOrder | ExtrinsicRotationOrder,
+        unit: AngleUnit
+        ) -> EulerAngles:
+        from .euler import EulerAngles
+        r = Rotation.from_matrix(self.value)
+        raw_euler_angles = r.as_euler(
+            order.value, 
+            degrees=unit.is_degree
+            )
+        return EulerAngles(
+            value=raw_euler_angles,
+            order=order,
+            unit=unit
+            )
+
