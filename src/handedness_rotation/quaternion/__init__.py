@@ -1,3 +1,3 @@
-from .container import HandednessQuaternion
+from .container import Quaternion
 
-__all__ = ["HandednessQuaternion"]
+__all__ = ["Quaternion"]
