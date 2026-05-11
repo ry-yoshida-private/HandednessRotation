@@ -17,7 +17,7 @@ class Quaternion(Q):
     Container class for quaternion representation of rotation with coordinate handedness.
 
     Inherits validation and format handling from Quaternion; adds a handedness tag
-    used when building a HandednessRotationMatrix from this quaternion.
+    used when building a RotationMatrix from this quaternion.
 
     Parameters
     ----------
@@ -36,12 +36,12 @@ class Quaternion(Q):
         """
         Convert quaternion to rotation matrix with handedness metadata.
 
-        Uses scipy.spatial.transform.Rotation; the resulting 3x3 matrix must still
-        satisfy HandednessRotationMatrix determinant rules for coordinate_handedness.
+        Uses scipy.spatial.transform.Rotation; the matrix is a proper rotation (det +1)
+        with coordinate_handedness stored as metadata.
 
         Returns
         -------
-        HandednessRotationMatrix:
+        RotationMatrix:
             The rotation matrix representation.
         """
         scipy_rotation = Rotation.from_quat(

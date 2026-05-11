@@ -7,12 +7,13 @@ from cartesian_axis import AxisOrientation, Axis
 
 class EulerIndexMapper:
     """
-    Mapper for Euler angles(roll, pitch, yaw) to their indices(0, 1, 2) in the rotation order.
-    
+    Maps semantic Euler axes (roll, pitch, yaw) to indices in a given rotation order, and reorders
+    angle vectors from that order to canonical [roll, pitch, yaw].
+
     Attributes
     ----------
-    euler_index_mapper: dict[RotationAxis, int]
-        The mapper for Euler angles to their indices in the rotation order.
+    euler_index_mapper : dict[RotationAxis, int]
+        For each RotationAxis, the index at which that angle appears in rotation_order.
     """
     def __init__(
         self,
@@ -24,16 +25,12 @@ class EulerIndexMapper:
         
         Parameters
         ----------
-        rotation_order: ExtrinsicRotationOrder | IntrinsicRotationOrder
-            The rotation order of the Euler angles.
-        forward_axis: Axis
-            The forward axis.
-        right_axis: Axis
-            The right axis.
-        up_axis: Axis
-            The up axis.
+        rotation_order : ExtrinsicRotationOrder | IntrinsicRotationOrder
+            Sequence of rotation axes; euler_angles[i] corresponds to rotation_order[i].
+        axis_orientation : AxisOrientation
+            Which Cartesian axes are forward, right, and up; these are mapped to roll, pitch, yaw.
         """
-        self.euler_index_mapper = EulerIndexMapper.get_euler_index_mapper(
+        self.euler_index_mapper: dict[RotationAxis, int] = EulerIndexMapper.get_euler_index_mapper(
             rotation_order=rotation_order,
             axis_orientation=axis_orientation
             )
@@ -44,26 +41,20 @@ class EulerIndexMapper:
         axis_orientation: AxisOrientation
         ) -> dict[RotationAxis, int]:
         """
-        Obtain a mapping that associates each Euler angle (roll, pitch, yaw)
-        with the corresponding axis in the Cartesian coordinate system and
-        its index in the given rotation order.
+        Build a mapping from each semantic angle (roll, pitch, yaw) to its index in
+        rotation_order, using axis_orientation to tie Cartesian axes to roll/pitch/yaw.
 
         Parameters
         ----------
         rotation_order : ExtrinsicRotationOrder | IntrinsicRotationOrder
-            The rotation order of the Euler angles.
-        forward_axis : Axis
-            The axis used to represent the forward direction.
-        right_axis : Axis
-            The axis used to represent the right direction.
-        up_axis : Axis
-            The axis used to represent the upward direction.
+            Sequence of rotation axes defining the layout of euler_angles.
+        axis_orientation : AxisOrientation
+            Forward, right, and up Cartesian axes; mapped respectively to roll, pitch, and yaw.
 
         Returns
         -------
         dict[RotationAxis, int]
-            A mapping from Euler angles (roll, pitch, yaw) to their indices
-            according to the specified rotation order.
+            Index in rotation_order for each RotationAxis.
         """
 
         axis_map : dict[Axis, RotationAxis] = {
@@ -79,17 +70,17 @@ class EulerIndexMapper:
         euler_angles: np.ndarray
         ) -> np.ndarray:
         """
-        Map Euler angles to their indices in the rotation order.
-        
+        Reorder euler_angles from rotation_order layout to [roll, pitch, yaw].
+
         Parameters
         ----------
-        euler_angles: np.ndarray
-            The Euler angles to map.
+        euler_angles : np.ndarray
+            Length-3 array indexed like rotation_order.
 
         Returns
         -------
-        np.ndarray:
-            The Euler angles in the rotation order(roll, pitch, yaw).
+        np.ndarray
+            Canonical [roll, pitch, yaw] values (same dtype/shape semantics as input elements).
         """
         return np.array([
             euler_angles[self.euler_index_mapper[RotationAxis.ROLL]], 

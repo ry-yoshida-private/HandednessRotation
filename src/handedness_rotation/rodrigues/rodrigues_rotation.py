@@ -32,7 +32,7 @@ class RodriguesRotationParameter(RRP):
 
         Returns
         -------
-        HandednessRotationMatrix:
+        RotationMatrix:
             The rotation matrix tagged with coordinate_handedness.
         """
         theta = np.linalg.norm(self.value)
