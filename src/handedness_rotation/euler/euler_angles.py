@@ -2,7 +2,10 @@ from __future__ import annotations
 import numpy as np
 from dataclasses import dataclass
 
+from cartesian_axis import CoordinateHandedness
 from units import AngleUnit, Angle
+
+from ..matrix import RotationMatrix
 from ..order import IntrinsicRotationOrder, ExtrinsicRotationOrder
 
 @dataclass
@@ -37,6 +40,42 @@ class EulerAngles:
     def __post_init__(self):
         if self.value.shape != (3,):
             raise ValueError(f"Euler angles must have shape (3,), got shape {self.value.shape}")
+
+    @property
+    def rotation_matrix(self) -> RotationMatrix:
+        """
+        Compose the 3×3 rotation from ``value`` and ``order``.
+
+        ``value[i]`` is the angle (after converting with ``unit``) about axis ``order[i]``.
+        Intrinsic orders multiply on the right per step; extrinsic on the left.
+
+        Returns
+        -------
+        RotationMatrix:
+            Composed rotation; ``coordinate_handedness`` is ``RIGHT``.
+        """
+        match self.unit:
+            case AngleUnit.DEGREE:
+                rad_values = np.deg2rad(self.value.astype(np.float64, copy=False))
+            case AngleUnit.RADIAN:
+                rad_values = self.value.astype(np.float64, copy=False)
+
+        res: np.ndarray = np.eye(3, dtype=np.float64)
+        handedness = CoordinateHandedness.RIGHT
+
+        for axis, angle in zip(self.order, rad_values, strict=True):
+            step: np.ndarray = RotationMatrix.from_axis_angle(
+                axis=axis,
+                angle=float(angle),
+                coordinate_handedness=handedness,
+            ).value
+            match self.order:
+                case IntrinsicRotationOrder():
+                    res = res @ step
+                case ExtrinsicRotationOrder():
+                    res = step @ res
+
+        return RotationMatrix(value=res, coordinate_handedness=handedness)
 
     @property
     def is_degrees(self) -> bool:
