@@ -1,12 +1,17 @@
 from __future__ import annotations
-import numpy as np
-from dataclasses import dataclass
 
+from dataclasses import dataclass
+from typing import TypeAlias
+
+import numpy as np
+from numpy.typing import NDArray
 from cartesian_axis import CoordinateHandedness
 from units import AngleUnit, Angle
 
 from ..matrix import RotationMatrix
 from ..order import IntrinsicRotationOrder, ExtrinsicRotationOrder
+
+Array: TypeAlias = NDArray[np.float64]
 
 @dataclass
 class EulerAngles:
@@ -42,7 +47,7 @@ class EulerAngles:
             raise ValueError(f"Euler angles must have shape (3,), got shape {self.value.shape}")
 
     @property
-    def rotation_matrix(self) -> RotationMatrix:
+    def rotation_matrix(self) -> Array:
         """
         Compose the 3×3 rotation from ``value`` and ``order``.
 
@@ -51,8 +56,8 @@ class EulerAngles:
 
         Returns
         -------
-        RotationMatrix:
-            Composed rotation; ``coordinate_handedness`` is ``RIGHT``.
+        Array:
+            Composed rotation as a ``float64`` (3, 3) matrix (same convention as SciPy).
         """
         match self.unit:
             case AngleUnit.DEGREE:
@@ -75,7 +80,7 @@ class EulerAngles:
                 case ExtrinsicRotationOrder():
                     res = step @ res
 
-        return RotationMatrix(value=res, coordinate_handedness=handedness)
+        return np.asarray(res, dtype=np.float64)
 
     @property
     def is_degrees(self) -> bool:

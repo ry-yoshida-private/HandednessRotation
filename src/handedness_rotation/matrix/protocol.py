@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Protocol, TypeVar
+from typing import Protocol, TypeVar, cast
 
 import numpy as np
 from cartesian_axis import CoordinateHandedness
@@ -36,3 +36,13 @@ class HandedRotationMatrixCls(Protocol[THandedOut]):
         value: np.ndarray,
         coordinate_handedness: CoordinateHandedness,
     ) -> THandedOut: ...
+
+
+_SubclassHanded = TypeVar("_SubclassHanded", bound=HandedRotationMatrixProtocol)
+
+
+def handed_rotation_matrix_ctor(
+    cls: type[_SubclassHanded],
+) -> HandedRotationMatrixCls[_SubclassHanded]:
+    """Narrow ``type[_R]`` for ``(*, value: ndarray, coordinate_handedness: ...) -> _R``."""
+    return cast(HandedRotationMatrixCls[_SubclassHanded], cls)

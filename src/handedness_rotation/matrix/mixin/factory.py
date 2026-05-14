@@ -1,31 +1,32 @@
 from __future__ import annotations
 
-import sys
+from typing import TypeVar
 
 import numpy as np
+import numpy.typing as npt
 from cartesian_axis import Axis, CoordinateHandedness
-from rotation import RotationMatrix as R
 
-if sys.version_info >= (3, 11):
-    from typing import Self
-else:
-    from typing_extensions import Self
+from ..protocol import HandedRotationMatrixProtocol, handed_rotation_matrix_ctor
+
+_R = TypeVar("_R", bound=HandedRotationMatrixProtocol)
 
 
-class RotationMatrixFactoryMixin(R):
+class RotationMatrixFactoryMixin:
     """
-    Single anchor to rotation.RotationMatrix: carries value validation and lets
-    classmethods call cls(..., value=..., coordinate_handedness=...) with sane typing.
+    Factory classmethods for handedness-tagged rotation matrices.
 
-    Combine only with plain mixins ahead of this one in the final class bases so R
-    appears once in the MRO.
+    Keep this mixin **plain** (do not subclass ``rotation.RotationMatrix``): the
+    upstream package already defines a ``RotationMatrixFactoryMixin`` on its
+    container; inheriting that type makes overrides clash with static analysis.
+    Combine with ``rotation.RotationMatrix`` (or a subclass) in the final class
+    bases so ``value`` validation and axis helpers remain available.
     """
 
     @classmethod
     def unit_matrix(
-        cls,
+        cls: type[_R],
         coordinate_handedness: CoordinateHandedness = CoordinateHandedness.RIGHT,
-    ) -> Self:
+    ) -> _R:
         """
         Create the identity rotation matrix with a given handedness.
 
@@ -36,20 +37,20 @@ class RotationMatrixFactoryMixin(R):
 
         Returns
         -------
-        Self:
+        _R:
             The 3x3 identity matrix tagged with coordinate_handedness.
         """
-        return cls(
-            value=np.eye(3),
-            coordinate_handedness=coordinate_handedness,  # type: ignore[call-arg]
+        return handed_rotation_matrix_ctor(cls)(
+            value=np.eye(3, dtype=np.float64),
+            coordinate_handedness=coordinate_handedness,
         )
 
     @classmethod
     def from_approximate_matrix_by_qr(
-        cls,
-        value: np.ndarray,
+        cls: type[_R],
+        value: npt.ArrayLike,
         coordinate_handedness: CoordinateHandedness = CoordinateHandedness.RIGHT,
-    ) -> Self:
+    ) -> _R:
         """
         Build a valid rotation matrix from an approximate 3x3 matrix using QR decomposition.
 
@@ -57,30 +58,32 @@ class RotationMatrixFactoryMixin(R):
 
         Parameters
         ----------
-        value: np.ndarray
+        value: array_like
             The approximate rotation matrix.
         coordinate_handedness: CoordinateHandedness
             The coordinate handedness.
 
         Returns
         -------
-        Self:
+        _R:
             The closest valid rotation matrix from the QR factor.
         """
-        Q, _ = np.linalg.qr(value)  # Q, R
-        if np.linalg.det(Q) < 0:
-            Q[:, -1] *= -1
-        return cls(
-            value=Q,
-            coordinate_handedness=coordinate_handedness,  # type: ignore[call-arg]
+        arr = np.asarray(value, dtype=np.float64)
+        q, _ = np.linalg.qr(arr)
+        if np.linalg.det(q) < 0:
+            q = q.copy()
+            q[:, -1] *= -1
+        return handed_rotation_matrix_ctor(cls)(
+            value=q,
+            coordinate_handedness=coordinate_handedness,
         )
 
     @classmethod
     def from_approximate_matrix_with_SVD(
-        cls,
-        value: np.ndarray,
+        cls: type[_R],
+        value: npt.ArrayLike,
         coordinate_handedness: CoordinateHandedness = CoordinateHandedness.RIGHT,
-    ) -> Self:
+    ) -> _R:
         """
         Build a valid rotation matrix from an approximate 3x3 matrix using SVD.
 
@@ -88,35 +91,37 @@ class RotationMatrixFactoryMixin(R):
 
         Parameters
         ----------
-        value: np.ndarray
+        value: array_like
             The approximate rotation matrix.
         coordinate_handedness: CoordinateHandedness
             The coordinate handedness.
 
         Returns
         -------
-        Self:
+        _R:
             The valid rotation matrix from the SVD-based orthogonalization.
         """
-        u, _, vh = np.linalg.svd(value)  # u, s, vh
-        rotation_matrix = u @ vh
+        arr = np.asarray(value, dtype=np.float64)
+        u, _, vh = np.linalg.svd(arr)
+        rotation_matrix: np.ndarray = u @ vh
 
         if np.linalg.det(rotation_matrix) < 0:
+            u = u.copy()
             u[:, -1] *= -1
             rotation_matrix = u @ vh
 
-        return cls(
+        return handed_rotation_matrix_ctor(cls)(
             value=rotation_matrix,
-            coordinate_handedness=coordinate_handedness,  # type: ignore[call-arg]
+            coordinate_handedness=coordinate_handedness,
         )
 
     @classmethod
     def from_axis_angle(
-        cls,
+        cls: type[_R],
         axis: Axis,
         angle: float,
         coordinate_handedness: CoordinateHandedness = CoordinateHandedness.RIGHT,
-    ) -> Self:
+    ) -> _R:
         """
         Elementary rotation: a right-handed angle in radians about the given axis.
 
@@ -131,7 +136,7 @@ class RotationMatrixFactoryMixin(R):
 
         Returns
         -------
-        Self:
+        _R:
             The 3x3 rotation matrix for that single-axis rotation.
         """
         c = float(np.cos(angle))
@@ -139,7 +144,7 @@ class RotationMatrixFactoryMixin(R):
 
         match axis:
             case Axis.X:
-                value = np.array(
+                mat = np.array(
                     [
                         [1.0, 0.0, 0.0],
                         [0.0, c, -s],
@@ -148,7 +153,7 @@ class RotationMatrixFactoryMixin(R):
                     dtype=np.float64,
                 )
             case Axis.Y:
-                value = np.array(
+                mat = np.array(
                     [
                         [c, 0.0, s],
                         [0.0, 1.0, 0.0],
@@ -157,7 +162,7 @@ class RotationMatrixFactoryMixin(R):
                     dtype=np.float64,
                 )
             case Axis.Z:
-                value = np.array(
+                mat = np.array(
                     [
                         [c, -s, 0.0],
                         [s, c, 0.0],
@@ -166,7 +171,7 @@ class RotationMatrixFactoryMixin(R):
                     dtype=np.float64,
                 )
 
-        return cls(
-            value=value,
-            coordinate_handedness=coordinate_handedness,  # type: ignore[call-arg]
+        return handed_rotation_matrix_ctor(cls)(
+            value=mat,
+            coordinate_handedness=coordinate_handedness,
         )

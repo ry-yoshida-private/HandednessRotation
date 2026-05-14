@@ -4,6 +4,7 @@ import numpy as np
 from dataclasses import dataclass
 
 from cartesian_axis import Axis, CoordinateHandedness
+from rotation import RotationMatrix as RotationMatrixBase
 
 from .mixin import (
     RotationMatrixConvertMixin,
@@ -17,6 +18,7 @@ class RotationMatrix(
     RotationMatrixConvertMixin,
     RotationMatrixSpecialMixin["RotationMatrix"],
     RotationMatrixFactoryMixin,
+    RotationMatrixBase,
 ):
     """
     A 3x3 proper rotation matrix (SO(3)) tagged with a coordinate handedness.

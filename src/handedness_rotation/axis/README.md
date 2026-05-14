@@ -2,12 +2,25 @@
 
 ## Overview
 
-Axis enums for 3D rotations: intrinsic (uppercase) and extrinsic (lowercase), matching `scipy.spatial.transform.Rotation` conventions, plus roll–pitch–yaw labels.
+Single-axis enums for 3D rotations: **intrinsic** axes use uppercase strings (`X`, `Y`, `Z`) and **extrinsic** axes use lowercase (`x`, `y`, `z`), aligned with `scipy.spatial.transform.Rotation` Euler conventions. **`RotationAxis`** names body-style angles (roll, pitch, yaw) for semantic mapping with [`EulerIndexMapper`](../euler/euler_index_mapper.py).
+
+## Example
+
+SciPy-style letters vs semantic body axes:
+
+```python
+from handedness_rotation import ExtrinsicAxis3D, IntrinsicAxis3D, RotationAxis
+
+assert IntrinsicAxis3D.Z.value == "Z"
+assert ExtrinsicAxis3D.Z.value == "z"
+
+semantic = (RotationAxis.ROLL, RotationAxis.PITCH, RotationAxis.YAW)
+```
 
 ## Components
 
-| Component | Description |
-|-----------|-------------|
-| [intrinsic.py](./intrinsic.py) | Enumeration for intrinsic axis in 3D (X, Y, Z) with uppercase representation |
-| [extrinsic.py](./extrinsic.py) | Enumeration for extrinsic axis in 3D (x, y, z) with lowercase representation |
-| [rotation.py](./rotation.py) | Enumeration for rotation axis types (ROLL, PITCH, YAW) |
+| Module | Exports | Description |
+| ------ | ------- | ----------- |
+| [`intrinsic.py`](./intrinsic.py) | `IntrinsicAxis3D` | Intrinsic rotation axis (one letter per enum member, uppercase value) |
+| [`extrinsic.py`](./extrinsic.py) | `ExtrinsicAxis3D` | Extrinsic rotation axis (lowercase value) |
+| [`rotation.py`](./rotation.py) | `RotationAxis` | `ROLL`, `PITCH`, `YAW` — used with `EulerIndexMapper` and `AxisOrientation` |

@@ -1,14 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from functools import cached_property
 
 from cartesian_axis import CoordinateHandedness
-from scipy.spatial.transform import Rotation # type: ignore
-
 from rotation import Quaternion as Q
-
-from ..matrix import RotationMatrix
 
 
 @dataclass(frozen=True)
@@ -16,8 +11,8 @@ class Quaternion(Q):
     """
     Container class for quaternion representation of rotation with coordinate handedness.
 
-    Inherits validation and format handling from Quaternion; adds a handedness tag
-    used when building a RotationMatrix from this quaternion.
+    Inherits validation, format handling, and ``rotation_matrix`` (plain ``float64``
+    array) from ``rotation.Quaternion``. ``coordinate_handedness`` is metadata only.
 
     Parameters
     ----------
@@ -30,25 +25,3 @@ class Quaternion(Q):
     """
 
     coordinate_handedness: CoordinateHandedness
-
-    @cached_property
-    def rotation_matrix(self) -> RotationMatrix:
-        """
-        Convert quaternion to rotation matrix with handedness metadata.
-
-        Uses scipy.spatial.transform.Rotation; the matrix is a proper rotation (det +1)
-        with coordinate_handedness stored as metadata.
-
-        Returns
-        -------
-        RotationMatrix:
-            The rotation matrix representation.
-        """
-        scipy_rotation = Rotation.from_quat(
-            self.value,
-            scalar_first=self.is_scalar_first,
-        )
-        return RotationMatrix(
-            value=scipy_rotation.as_matrix(),
-            coordinate_handedness=self.coordinate_handedness,
-        )
